@@ -17,8 +17,12 @@ import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
+import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
+import com.amazonaws.services.dynamodbv2.document.utils.ValueMap;
+import com.amazonaws.services.dynamodbv2.model.ReturnValue;
 
 
 public class RequestProcess {
@@ -177,7 +181,7 @@ public class RequestProcess {
 					 
 					 return res;
 					
-				} catch (Exception e) {
+				}catch (Exception e) {
 					e.printStackTrace();
 					res.setStatus("400");
 					res.setMsg("Data retrive error");
@@ -188,6 +192,58 @@ public class RequestProcess {
 				}
 			}
 				
+			case "update":
+			{
+				AmazonDynamoDB client = AmazonDynamoDBClientBuilder
+						.standard()
+						.withRegion(region)
+						.build();
+
+				DynamoDB dynamoDB = new DynamoDB(client);
+
+				Table table =	dynamoDB.getTable("Test_Customer_Details");
+				String customer_Id = clients.getCustomer_Id();
+				
+				UpdateItemSpec updateItemSpec = new UpdateItemSpec().withPrimaryKey("customer_Id ",customer_Id)
+									.withUpdateExpression("set client_name = :n, company_name = :c, phone_no = :p, email_id = :e")
+									.withValueMap(new ValueMap().withString(":n", clients.getClient_name())
+																.withString(":c", clients.getCompany_name())
+																.withString(":p", clients.getPhone_no())
+																.withString(":e", clients.getEmail_id()))
+																.withReturnValues(ReturnValue.UPDATED_NEW);
+				
+				try {
+					UpdateItemOutcome outcome = table.updateItem(updateItemSpec);
+					Item item = outcome.getItem();
+					
+					cobj.setCustomer_Id(item.getString("customer_Id ")); 
+					cobj.setClient_name(item.getString("client_name"));
+					cobj.setCompany_name(item.getString("company_name"));
+					cobj.setPhone_no(item.getString("phone_no"));
+					cobj.setEmail_id(item.getString("email_id"));
+					
+					cList.add(cobj);
+					
+					 res.setStatus("200");
+					 res.setMsg("Data updated successfully");
+					 res.setClients_details(cList);
+					 res.setResult(null);
+					 
+					 return res;
+					
+					
+				}catch (Exception e) {
+					e.printStackTrace();
+					res.setStatus("400");
+					res.setMsg("error");
+					res.setResult(null);
+					res.setClients_details(null);
+					
+					return res;	
+				}
+			}
+			
+			
 			default:{
 				
 				res.setStatus("400");
