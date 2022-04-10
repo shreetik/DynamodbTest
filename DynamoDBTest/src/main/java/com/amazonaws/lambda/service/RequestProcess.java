@@ -2,6 +2,7 @@ package com.amazonaws.lambda.service;
 
 
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 
@@ -12,9 +13,12 @@ import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDBClientBuilder;
 import com.amazonaws.services.dynamodbv2.document.DynamoDB;
 import com.amazonaws.services.dynamodbv2.document.Item;
+import com.amazonaws.services.dynamodbv2.document.ItemCollection;
 import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
+import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 
 
 public class RequestProcess {
@@ -134,6 +138,54 @@ public class RequestProcess {
 				}
 				
 				
+			}
+			
+			case "fetchAll" :
+			{
+				AmazonDynamoDB client = AmazonDynamoDBClientBuilder
+						.standard()
+						.withRegion(region)
+						.build();
+
+				DynamoDB dynamoDB = new DynamoDB(client);
+
+				Table table =	dynamoDB.getTable("Test_Customer_Details");
+				
+				ScanSpec scanSpec = new ScanSpec().withProjectionExpression("customer_Id ,client_name,company_name,phone_no,email_id");
+				
+				try {
+					
+					ItemCollection<ScanOutcome> items = table.scan(scanSpec);
+					
+					Iterator<Item> iter = items.iterator();
+					while (iter.hasNext()) {
+						Item item = iter.next();
+						
+						cobj.setCustomer_Id(item.getString("customer_Id ")); 
+						cobj.setClient_name(item.getString("client_name"));
+						cobj.setCompany_name(item.getString("company_name"));
+						cobj.setPhone_no(item.getString("phone_no"));
+						cobj.setEmail_id(item.getString("email_id"));
+						
+						cList.add(cobj);
+					}
+					
+					 res.setStatus("200");
+					 res.setMsg("All Data retrieved successfully");
+					 res.setClients_details(cList);
+					 res.setResult(null);
+					 
+					 return res;
+					
+				} catch (Exception e) {
+					e.printStackTrace();
+					res.setStatus("400");
+					res.setMsg("Data retrive error");
+					res.setResult(null);
+					res.setClients_details(null);
+					
+					return res;	
+				}
 			}
 				
 			default:{
