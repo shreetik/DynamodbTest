@@ -12,8 +12,7 @@ public class LambdaFunctionHandler implements RequestHandler<Request, Response> 
     @Override
     public Response handleRequest(Request input, Context context) {
         
-    	String action;
-    	String region;
+    	String action,region;
     	
     	Clients clients = new Clients();
     	
