@@ -18,6 +18,7 @@ import com.amazonaws.services.dynamodbv2.document.PutItemOutcome;
 import com.amazonaws.services.dynamodbv2.document.ScanOutcome;
 import com.amazonaws.services.dynamodbv2.document.Table;
 import com.amazonaws.services.dynamodbv2.document.UpdateItemOutcome;
+import com.amazonaws.services.dynamodbv2.document.spec.DeleteItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.GetItemSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.ScanSpec;
 import com.amazonaws.services.dynamodbv2.document.spec.UpdateItemSpec;
@@ -243,6 +244,44 @@ public class RequestProcess {
 				}
 			}
 			
+			case "delete" :{
+				
+				AmazonDynamoDB client = AmazonDynamoDBClientBuilder
+						.standard()
+						.withRegion(region)
+						.build();
+
+				DynamoDB dynamoDB = new DynamoDB(client);
+
+				Table table =	dynamoDB.getTable("Test_Customer_Details");
+				String customer_Id = clients.getCustomer_Id();
+				
+				DeleteItemSpec deleteItemSpec = new DeleteItemSpec()
+						.withPrimaryKey("customer_Id ",customer_Id);
+				
+				try {
+					
+					table.deleteItem(deleteItemSpec);
+					
+					res.setStatus("200");
+					 res.setMsg("Data removed successfully");
+					 res.setClients_details(null);
+					 res.setResult(null);
+					 
+					 return res;
+					
+				} catch (Exception e) {
+					
+					e.printStackTrace();
+					res.setStatus("400");
+					res.setMsg("error");
+					res.setResult(null);
+					res.setClients_details(null);
+					
+					return res;	
+				}
+																					
+			}
 			
 			default:{
 				
